@@ -1,0 +1,228 @@
+.Polaris-Card {
+    height: 100%;
+}
+
+.Polaris-Layout__Section {
+    margin-left: var(--p-space-4) !important;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 160px;
+    top: 114%;
+    width: 225px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.dropdown-menu ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dropdown-menu ul li {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-menu ul li input[type="radio"] {
+    margin-right: 10px;
+}
+
+
+
+.date-picker label {
+    margin-right: 5px;
+}
+
+.date-picker input[type="date"] {
+    margin: 5px 0;
+    width: 185px;
+    height: 35px;
+}
+
+.dropdown-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.dropdown-buttons .Polaris-Button {
+    margin-right: 5px;
+}
+
+.Polaris-Page {
+    max-width: 100% !important;
+}
+
+.review-header,
+.review-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    /* Five columns: three for Customer, Created, Rating, one spacer, and one for Status */
+    align-items: center;
+    gap: 20px;
+    /* Adjust as necessary */
+    padding: 10px;
+}
+
+.review-header {
+    font-weight: bold;
+}
+
+.review-item {
+    border-bottom: 1px solid #e1e3e5;
+    /* Optional: Adds a bottom border for clarity */
+}
+
+.item-status,
+.item-content,
+.item-created,
+.item-rating,
+.item-actions {
+    /* Ensure items align properly */
+    align-items: center;
+}
+
+.spacer {
+    flex-grow: 1;
+    /* This will push the Status to the right */
+}
+
+.star-rating {
+    color: #faca51;
+    width: 100px;
+    display: flex;
+    /* Adjust the color as necessary */
+}
+
+.star.filled {
+    color: #faca51;
+    /* Adjust the color as necessary */
+}
+
+.star {
+    color: #e1e3e5;
+    /* Adjust the color as necessary */
+}
+
+.star-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    /* Adjust spacing between stars */
+}
+
+.star {
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.star:hover {
+    transform: scale(1.2);
+    /* Slight zoom on hover */
+}
+
+.filled {
+    color: #00848e;
+    /* Teal color to match your provided example */
+}
+
+.base {
+    color: #d0d0d0;
+    /* Light gray for unfilled stars */
+}
+
+/* index.css */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+span.Polaris-Text--root.Polaris-Text--subdued {
+    color: black;
+    font-weight: 500;
+}
+
+span.Polaris-ActionList__Prefix {
+    padding-top: 5px;
+}
+
+.tab-selected {
+    background-color: #e0f8ee;
+    /* Change this to your desired color */
+}
+
+.tab {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 12px;
+    font-weight: 500;
+    color: black;
+    border-radius: 5px;
+    word-spacing: 1px;
+    letter-spacing: 0.5px;
+}
+
+.tab:hover {
+    background-color: #e0f8ee;
+    /* Change this to your desired hover color */
+}
+
+.review-count {
+    display: inline-block;
+    background-color: #aee9d1;
+    /* Adjust the color to match your theme */
+    color: black;
+    padding: 4px 8px;
+    border-radius: 50%;
+    font-size: 12px;
+   font-weight: 500;
+    text-align: center;
+    margin-left: 6px;
+    min-width: 24px;
+    /* Ensures it stays circular even with fewer digits */
+    height: 24px;
+    /* Same as min-width to keep it round */
+    line-height: 16px;
+    /* Centers text vertically */
+}
+
+.main-tabs-header {
+    margin-bottom: 50px;
+    /* Adjust as needed */
+}
+
+.title-container {
+    margin-bottom: 50px;
+    font-size: 24px;
+    font-weight: 500;
+    margin-top: 20px;
+    /* Space between title and filter tabs */
+}
+
+.content-wrapper {
+    margin-top: 20px;
+    /* Space between main tabs and data content */
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.Polaris-Select__Option {
+    padding-left: 20px;
+    /* Adjust as needed */
+}

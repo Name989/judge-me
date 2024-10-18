@@ -1,0 +1,29 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "a0005322103a9d1d178de87336c1b9b8"
+name = "judge-me"
+handle = "judge-me-3"
+application_url = "https://leslie-carbon-enabled-recipients.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "devzehn1.myshopify.com"
+include_config_on_deploy = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = [
+  "https://leslie-carbon-enabled-recipients.trycloudflare.com/auth/callback",
+  "https://leslie-carbon-enabled-recipients.trycloudflare.com/auth/shopify/callback",
+  "https://leslie-carbon-enabled-recipients.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-10"
+
+[pos]
+embedded = false

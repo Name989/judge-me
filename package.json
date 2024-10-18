@@ -1,0 +1,25 @@
+{
+  "name": "judge-me",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "shopify": "shopify",
+    "build": "shopify app build",
+    "dev": "shopify app dev",
+    "push": "shopify app push",
+    "generate": "shopify app generate",
+    "deploy": "shopify app deploy",
+    "info": "shopify app info"
+  },
+  "author": "HarshitPatidar",
+  "private": true,
+  "workspaces": [
+    "extensions/*",
+    "web",
+    "web/frontend"
+  ],
+  "dependencies": {
+    "@shopify/polaris-icons": "^9.3.0",
+    "react-icons": "^5.3.0"
+  }
+}
