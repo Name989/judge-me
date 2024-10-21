@@ -17,9 +17,12 @@ class ReviewController extends Controller
     
    public function updateStatus(Request $request, $id)
     {
-        // Validate the request data
+        // Validate the request data for the fields that might be updated
         $request->validate([
-            'status' => 'required|string|max:255', // Adjust validation rules as necessary
+            'status' => 'nullable|string|max:255', // Optional field
+            'title' => 'nullable|string|max:255', // Optional field
+            'description' => 'nullable|string',   // Optional field
+            'type' => 'nullable|string',
         ]);
 
         // Find the review by ID
@@ -29,10 +32,12 @@ class ReviewController extends Controller
             return response()->json(['message' => 'Review not found'], 404);
         }
 
-        // Update the review status
-        $review->status = $request->input('status');
+        // Update status, title, and description together if they exist in the request
+        $review->fill($request->only(['status', 'title', 'description','type']));
+
+        // Save the changes to the database
         $review->save();
 
-        return response()->json(['message' => 'Review status updated successfully']);
+        return response()->json(['message' => 'Review updated successfully']);
     }
 }

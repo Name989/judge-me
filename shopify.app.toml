@@ -3,7 +3,7 @@
 client_id = "a0005322103a9d1d178de87336c1b9b8"
 name = "judge-me"
 handle = "judge-me-3"
-application_url = "https://leslie-carbon-enabled-recipients.trycloudflare.com"
+application_url = "https://aluminium-ha-seminar-plays.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://leslie-carbon-enabled-recipients.trycloudflare.com/auth/callback",
-  "https://leslie-carbon-enabled-recipients.trycloudflare.com/auth/shopify/callback",
-  "https://leslie-carbon-enabled-recipients.trycloudflare.com/api/auth/callback"
+  "https://aluminium-ha-seminar-plays.trycloudflare.com/auth/callback",
+  "https://aluminium-ha-seminar-plays.trycloudflare.com/auth/shopify/callback",
+  "https://aluminium-ha-seminar-plays.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

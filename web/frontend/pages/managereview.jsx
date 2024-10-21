@@ -1,6 +1,6 @@
 // ReviewsDashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Page, Tabs, Select, DataTable, ButtonGroup, Button, Icon, Pagination, Popover, ActionList, Toast, Frame, Spinner } from '@shopify/polaris';
+import { Card, Page, Tabs, Select, DataTable, ButtonGroup, Button, Icon, Pagination, Popover, ActionList, Toast, Frame, Spinner, Modal, TextField } from '@shopify/polaris';
 import { StarFilledIcon } from '@shopify/polaris-icons';
 import "@shopify/polaris/build/esm/styles.css";
 import './index.css';
@@ -50,7 +50,6 @@ const ReviewsDashboard = () => {
   const [reviewsCount, setReviewsCount] = useState({ // Store counts for each filter tab
     allReviews: 0,
     productReviews: 0,
-    storeReviews: 0,
     spam: 0,
     archive: 0,
   });
@@ -58,6 +57,10 @@ const ReviewsDashboard = () => {
   // State for toast
   const [toastActive, setToastActive] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [editReview, setEditReview] = useState(null); // State to manage which review is being edited
+  const [isEditModalOpen, setEditModalOpen] = useState(false); // State to manage modal visibility
+  const [editReviewcost, setEditReviewcost] = useState(null); // State to manage which review is being edited
+  const [isEditModalOpencost, setEditModalOpencost] = useState(false); // State to manage modal visibility
 
   const toggleToast = useCallback(() => setToastActive((active) => !active), []);
 
@@ -76,7 +79,6 @@ const ReviewsDashboard = () => {
   const filterTabs = [
     { id: 'allReviews', content: 'All Reviews' },
     { id: 'productReviews', content: 'Product Reviews' },
-    { id: 'storeReviews', content: 'Store Reviews' },
     { id: 'spam', content: 'Spam' },
     { id: 'archive', content: 'Archive' },
   ];
@@ -90,6 +92,61 @@ const ReviewsDashboard = () => {
       setFilteredReviews(data);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
+    }
+  };
+  const unarchived = async (id) => {
+    try {
+      // Send the status update to the server
+      const response = await fetch(`/api/reviews/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'Product' }), // Only send the status update
+      });
+
+      if (!response.ok) throw new Error('Failed to update review type');
+
+      // Update the status in the reviews state without resetting the entire review
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review.id === id ? { ...review, type: 'Product' } : review
+        )
+      );
+
+      setToastMessage(`Review marked as Unarchived`);
+      setToastActive(true);
+
+    } catch (error) {
+      console.error('Failed to update review status:', error);
+    }
+  };
+
+
+  const updateReviewtype = async (id) => {
+    try {
+      // Send the status update to the server
+      const response = await fetch(`/api/reviews/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'Archived' }), // Only send the status update
+      });
+
+      if (!response.ok) throw new Error('Failed to update review type');
+
+      // Update the status in the reviews state without resetting the entire review
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review.id === id ? { ...review, type: 'Archived' } : review
+        )
+      );
+      setToastMessage(`Review marked as Archived`);
+      setToastActive(true);
+    
+    } catch (error) {
+      console.error('Failed to update review status:', error);
     }
   };
 
@@ -123,7 +180,53 @@ const ReviewsDashboard = () => {
       setLoadingReviewId(null); // Reset loading review ID
     }
   };
+  const handleEditReview = (review) => {
+    setEditReview(review); // Set the review being edited
+    setEditModalOpen(true); // Open the modal
+  };
+  const handleEditReviewcost = (review) => {
+    setEditReviewcost(review); // Set the review being edited
+    setEditModalOpencost(true); // Open the modal
+  };
 
+  const handleSaveEdit = async (id) => {
+    if (editReview) {
+      try {
+        // Send the updated review data to your backend
+        const response = await fetch(`/api/reviews/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: editReview.title,
+            description: editReview.description,
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to update review');
+
+        // Update the reviews state with the new data
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            review.id === editReview.id ? { ...review, ...editReview } : review
+          )
+        );
+
+        // Close the modal and reset the editReview state
+        setEditModalOpen(false);
+        setEditReview(null);
+        setToastMessage('Review updated successfully');
+        setToastActive(true);
+      } catch (error) {
+        console.error('Failed to save edit:', error);
+      }
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setEditReview((prev) => ({ ...prev, [field]: value })); // Update the corresponding field
+  };
 
 
   const filterReviews = (reviewsToFilter, selectedTabId) => {
@@ -134,9 +237,7 @@ const ReviewsDashboard = () => {
       );
     } else if (selectedTabId === 'productReviews') {
       filtered = reviewsToFilter.filter((review) => review.type === 'Product');
-    } else if (selectedTabId === 'storeReviews') {
-      filtered = reviewsToFilter.filter((review) => review.type === 'Store');
-    } else if (selectedTabId === 'spam') {
+    }  else if (selectedTabId === 'spam') {
       filtered = reviewsToFilter.filter((review) => review.type === 'Spam');
     } else if (selectedTabId === 'archive') {
       filtered = reviewsToFilter.filter((review) => review.type === 'Archived');
@@ -148,7 +249,6 @@ const ReviewsDashboard = () => {
     setReviewsCount({
       allReviews: reviewsToFilter.filter((review) => review.type !== 'Spam' && review.type !== 'Archived').length,
       productReviews: reviewsToFilter.filter((review) => review.type === 'Product').length,
-      storeReviews: reviewsToFilter.filter((review) => review.type === 'Store').length,
       spam: reviewsToFilter.filter((review) => review.type === 'Spam').length,
       archive: reviewsToFilter.filter((review) => review.type === 'Archived').length,
     });
@@ -161,6 +261,7 @@ const ReviewsDashboard = () => {
   const handleFilterTabChange = (selectedTabIndex) => {
     setSelectedFilterTab(selectedTabIndex);
     filterReviews(reviews, filterTabs[selectedTabIndex].id);
+    console.log('tab-id-----', selectedTabIndex )
   };
 
   const handleSort = useCallback(
@@ -267,17 +368,26 @@ const ReviewsDashboard = () => {
             {
               content: 'Ask customer to update review',
               prefix: <Icon source={HiPencil} />, // Using the edit icon as a placeholder; replace with a more specific one if available
-              onAction: () => console.log('Ask customer to update review'),
+              onAction: () => handleEditReviewcost(review),
             },
+            // Conditional item for Archive/Unarchive based on filterTabs
             {
-              content: 'Archive',
+              content: selectedFilterTab == 3 ? 'Unarchive' : 'Archive',
               prefix: <Icon source={FaArchive} />,
-              onAction: () => console.log('Archive action'),
+              onAction: () => {
+                if (selectedFilterTab == 3) {
+                  // Call the function to unarchive the review
+                  unarchived(review.id);
+                } else {
+                  // Call the function to archive the review
+                  updateReviewtype(review.id);
+                }
+              },
             },
             {
               content: 'Edit review',
               prefix: <Icon source={HiPencil} />,
-              onAction: () => console.log('Edit review action'),
+              onAction: () => handleEditReview(review),
             },
             {
               content: 'View review details',
@@ -340,6 +450,60 @@ const ReviewsDashboard = () => {
             </Card.Section>
           </Card>
         </div>
+        {isEditModalOpencost && (
+          <Modal
+            open={isEditModalOpencost}
+            onClose={() => setEditModalOpencost(false)}
+            title="Ask coustomer to update review"
+            primaryAction={{
+              content: 'Send Email',
+              onAction: () => handleSaveEdit(editReviewcost.id),
+            }}
+          >
+            <Modal.Section>
+              <div>
+                <TextField
+                  label="Title"
+                  value={editReviewcost?.title || ''}
+                  onChange={(value) => handleChange('title', value)}
+                />
+                <TextField
+                  label="Description"
+                  value={editReviewcost?.description || ''}
+                  onChange={(value) => handleChange('description', value)}
+                  multiline={4}
+                />
+              </div>
+            </Modal.Section>
+          </Modal>
+        )}
+        {isEditModalOpen && (
+          <Modal
+            open={isEditModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            title="Edit Review"
+            primaryAction={{
+              content: 'Save',
+              onAction: () => handleSaveEdit(editReview.id),
+            }}
+          >
+            <Modal.Section>
+              <div>
+                <TextField
+                  label="Title"
+                  value={editReview?.title || ''}
+                  onChange={(value) => handleChange('title', value)}
+                />
+                <TextField
+                  label="Description"
+                  value={editReview?.description || ''}
+                  onChange={(value) => handleChange('description', value)}
+                  multiline={4}
+                />
+              </div>
+            </Modal.Section>
+          </Modal>
+        )}
         {toastActive && <Toast content={toastMessage} onDismiss={toggleToast} />}
       </Page>
     </Frame>
