@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './index.css';
 import {
   Page,
@@ -10,32 +11,125 @@ import {
   ButtonGroup,
   Stack,
   DataTable,
+  Icon
 } from '@shopify/polaris';
 import { MdCalendarToday } from 'react-icons/md';
-
-
-
+import jimage from './images/letter-j.png';
+import { StarFilledIcon } from '@shopify/polaris-icons';
 function DashboardPage() {
-  const [data, setData] = useState({
-    reviewRequestsSent: 0,
-    reviewsOverTime: 3,
+  const [reviews, setReviews] = useState([]);
+  const [reviewInsights, setReviewInsights] = useState({
+    requestsSent: 0,
+    reviewsOverTime: 0,
     revenueGenerated: 0,
-    averageRating: 4.33,
+    averageRating: 0,
     ordersFromJudgeMe: 0,
     questionsReceived: 0,
     trustScores: { transparency: 0, authenticity: 0 },
-    topProducts: [{ name: 'eeeeeeee', reviews: 2, rating: 4 }],
-    recentReviews: [
-      { rating: 4, comment: 'iiiiiiii', date: '22 hours ago' },
-      { rating: 5, comment: '5t', date: '2 days ago' },
-    ],
   });
 
+
+  const [topProducts, setTopProducts] = useState([]);
+  const [recentReviews, setRecentReviews] = useState([]);
+
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const dropdownRef = useRef(null);
+  const handleRedirect = () => {
+    navigate('/managereview');
+  };
+  const handleRedirect1 = () => {
+    navigate('/statics');
+  };
 
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch('/api/reviews');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      // Process data to set top products and recent reviews
+      const topProducts = calculateTopProducts(data); // Assume this function processes top products
+      const recentReviews = data.slice(0, 5); // Show only the 5 most recent reviews
+      setReviews(data);
+      setTopProducts(topProducts);
+      setRecentReviews(recentReviews);
+      // Calculate insights based on the fetched reviews
+      calculateReviewInsights(data);
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error);
+    }
+  };
+
+  const getDaysAgo = (dateString) => {
+    const givenDate = new Date(dateString);
+    const today = new Date();
+    givenDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffTime = today - givenDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays === 0 ? 'Today' : `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
+
+  const StarRating = ({ rating }) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Icon
+          key={i}
+          source={StarFilledIcon}
+          color={i <= rating ? 'highlight' : 'base'}
+          size="large"
+          className={`star ${i <= rating ? 'filled' : ''}`}
+        />
+      );
+    }
+    return <div className="star-rating">{stars}</div>;
+  };
+
+  const calculateReviewInsights = (data) => {
+    const totalReviews = data.length;
+    const totalRequestsSent = totalReviews + 5; // Assuming you sent 5 more requests than reviews
+    const averageRating = totalReviews > 0 ? (data.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1) : 0;
+    const revenueGenerated = data.reduce((sum, review) => sum + (review.revenue || 0), 0);
+    const questionsReceived = data.reduce((sum, review) => sum + (review.questions || 0), 0);
+
+    // For Trust Scores
+    const transparencyScore = calculateTransparency(data);
+    const authenticityScore = calculateAuthenticity(data);
+
+    setReviewInsights({
+      requestsSent: totalRequestsSent,
+      reviewsOverTime: totalReviews,
+      revenueGenerated: revenueGenerated.toFixed(2),
+      averageRating,
+      ordersFromJudgeMe: totalReviews, // Assuming each review is linked to an order
+      questionsReceived,
+      trustScores: {
+        transparency: transparencyScore,
+        authenticity: authenticityScore,
+      },
+    });
+  };
+
+  const calculateTransparency = (reviews) => {
+    // Example logic: All reviews should have a rating, comment, and date to be fully transparent
+    const total = reviews.length;
+    const transparentReviews = reviews.filter((review) => review.rating && review.comment && review.date).length;
+    return total > 0 ? ((transparentReviews / total) * 100).toFixed(0) : 0;
+  };
+
+  const calculateAuthenticity = (reviews) => {
+    // Example logic: All reviews with user details and no signs of spam are considered authentic
+    const total = reviews.length;
+    const authenticReviews = reviews.filter((review) => review.user && !review.isSpam).length;
+    return total > 0 ? ((authenticReviews / total) * 100).toFixed(0) : 0;
+  };
   useEffect(() => {
     // Calculate the current date and the date 3 days prior
     const today = new Date();
@@ -46,11 +140,28 @@ function DashboardPage() {
     const formatDate = (date) => date.toISOString().split('T')[0];
     setEndDate(formatDate(today));
     setStartDate(formatDate(threeDaysAgo));
-
-    fetchData().then((fetchedData) => {
-      setData(fetchedData);
-    });
   }, []);
+
+
+  const calculateTopProducts = (data) => {
+    // Implement logic to determine top products by review count, rating, etc.
+    const productReviews = {}; // Object to store aggregated reviews per product
+
+    data.forEach((review) => {
+      const productName = review.productName; // Assume product name is part of the review data
+      if (!productReviews[productName]) {
+        productReviews[productName] = { name: productName, reviews: 0, totalRating: 0 };
+      }
+      productReviews[productName].reviews += 1;
+      productReviews[productName].totalRating += review.rating;
+    });
+
+    // Convert object to array and calculate average rating
+    return Object.values(productReviews).map((product) => ({
+      ...product,
+      rating: (product.totalRating / product.reviews).toFixed(1),
+    }));
+  };
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -75,18 +186,20 @@ function DashboardPage() {
 
   return (
     <Page>
+      <div style={{display:'flex', justifyContent:'center', width:'100%'}}>
+      <div style={{ maxWidth:'62.375rem'}}>
       {/* Header Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="https://cdn.shopify.com/s/files/1/0533/2089/files/judgeme-logo.png"
+            src={jimage}
             alt="Judge.me logo"
             style={{ width: '40px', marginRight: '10px' }}
           />
-          <h1 style={{ margin: 0 }}>Judge.me</h1>
+          <h1 style={{ margin: 0, fontSize:'20px', fontWeight:'bold' }}>Judge.me</h1>
         </div>
         <ButtonGroup>
-          <Button>Reviews Dashboard</Button>
+          <Button onClick={handleRedirect}>Reviews Dashboard</Button>
           <Button>Search settings</Button>
         </ButtonGroup>
       </div>
@@ -95,7 +208,7 @@ function DashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', position: 'relative' }}>
         <ButtonGroup>
           <Button icon={<MdCalendarToday/>} onClick={toggleDropdown}>Last 30 days</Button>
-          <Button>View reports</Button>
+          <Button onClick={handleRedirect1}>View reports</Button>
         </ButtonGroup>
         
          {/* Dropdown */}
@@ -137,7 +250,7 @@ function DashboardPage() {
           <Card sectioned title="Review requests sent">
             <Stack>
               <TextStyle variation="strong" textAlign="center">
-                {data.reviewRequestsSent}
+                  {reviewInsights.requestsSent}
               </TextStyle>
               <TextStyle variation="subdued">— 0%</TextStyle>
             </Stack>
@@ -150,7 +263,7 @@ function DashboardPage() {
           <Card sectioned title="Reviews over time">
             <Stack>
               <TextStyle variation="strong" textAlign="center">
-                {data.reviewsOverTime}
+                  {reviewInsights.reviewsOverTime}
               </TextStyle>
               <Badge status="success">↑ 100%</Badge>
             </Stack>
@@ -163,7 +276,7 @@ function DashboardPage() {
           <Card sectioned title="Revenue generated">
             <Stack>
               <TextStyle variation="strong" textAlign="center">
-                ${data.revenueGenerated}
+                ${reviewInsights.revenueGenerated}
               </TextStyle>
               <TextStyle variation="subdued">— 0%</TextStyle>
             </Stack>
@@ -177,7 +290,7 @@ function DashboardPage() {
             <Card sectioned title="Average rating" style={{ height: '100%' }}>
               <Stack>
                 <TextStyle variation="strong" textAlign="center">
-                  {data.averageRating.toFixed(2)}
+                  {reviewInsights.averageRating}
                 </TextStyle>
                 <Badge status="success">↑ 100%</Badge>
               </Stack>
@@ -188,7 +301,7 @@ function DashboardPage() {
             <Card sectioned title="Orders from Judge.me" style={{ height: '100%' }}>
               <Stack>
                 <TextStyle variation="strong" textAlign="center">
-                  {data.ordersFromJudgeMe}
+                  {reviewInsights.ordersFromJudgeMe}
                 </TextStyle>
                 <TextStyle variation="subdued">— 0%</TextStyle>
               </Stack>
@@ -199,7 +312,7 @@ function DashboardPage() {
             <Card sectioned title="Questions received" style={{ height: '100% !important' }}>
               <Stack>
                 <TextStyle variation="strong" textAlign="center">
-                  {data.questionsReceived}
+                  {reviewInsights.questionsReceived}
                 </TextStyle>
                 <TextStyle variation="subdued">— 0%</TextStyle>
               </Stack>
@@ -210,10 +323,10 @@ function DashboardPage() {
             <Card sectioned title="Trust scores" style={{ height: '100%' }}>
               <Stack>
                 <TextStyle variation="strong">
-                  Transparency: {data.trustScores.transparency}%
+                  Transparency: {reviewInsights.trustScores.transparency}%
                 </TextStyle>
                 <TextStyle variation="strong">
-                  Authenticity: {data.trustScores.authenticity}%
+                  Authenticity: {reviewInsights.trustScores.authenticity}%
                 </TextStyle>
               </Stack>
             </Card>
@@ -221,55 +334,41 @@ function DashboardPage() {
         </div>
 
         {/* Third Row: 2 Cards */}
-          <Layout.Section oneHalf>
-            <Card sectioned title="Top products">
-              <DataTable
-                columnContentTypes={['text', 'text', 'text']}
-                headings={['Product', 'Reviews', 'Rating']}
-                rows={data.topProducts.map(product => [product.name, product.reviews, product.rating])}
-              />
-            </Card>
-          </Layout.Section>
+        <Layout.Section oneHalf>
+          <Card sectioned title="Top products">
+            <DataTable
+              columnContentTypes={['text', 'text', 'text']}
+              headings={['Product', 'Reviews', 'Rating']}
+              rows={topProducts.map(product => [product.name, product.reviews, product.rating])}
+            />
+          </Card>
+        </Layout.Section>
 
-          <Layout.Section oneHalf>
-            <Card title="Recent activity" sectioned>
-              <Stack vertical>
-                <TextStyle variation="strong">Last reviews</TextStyle>
-                {data.recentReviews.map((review, index) => (
-                  <Stack key={index} alignment="center">
-                    <TextStyle>
-                      {Array(review.rating).fill('⭐').join('')} — {review.comment}
-                    </TextStyle>
-                    <TextStyle variation="subdued">({review.date})</TextStyle>
+        <Layout.Section oneHalf>
+          <Card title="Recent activity" sectioned>
+            <Stack vertical>
+              <TextStyle variation="strong">Last reviews</TextStyle>
+              {recentReviews.map((review, index) => (
+                <div style={{ borderBottom: '1px solid #c0bebe', borderColor:'##c0bebe', paddingBottom:'15px'}}>
+                <Stack key={index} alignment="center">
+                  <TextStyle>
+                    <div style={{display:'flex'}}>
+                    <StarRating  rating={review.rating} /> — {getDaysAgo(review.created_at)}
+                    </div>
+                    {review.title}<br></br>
+                    {review.description}
+                  </TextStyle>
                   </Stack>
-                ))}
-              </Stack>
-            </Card>
-          </Layout.Section>
-      </Layout>
+                  </div>
+              ))}
+            </Stack>
+          </Card>
+        </Layout.Section>
+        </Layout>
+        </div>
+        </div>
     </Page>
   );
-}
-
-async function fetchData() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        reviewRequestsSent: 0,
-        reviewsOverTime: 3,
-        revenueGenerated: 0,
-        averageRating: 4.33,
-        ordersFromJudgeMe: 0,
-        questionsReceived: 0,
-        trustScores: { transparency: 0, authenticity: 0 },
-        topProducts: [{ name: 'eeeeeeee', reviews: 2, rating: 4 }],
-        recentReviews: [
-          { rating: 4, comment: 'iiiiiiii', date: '22 hours ago' },
-          { rating: 5, comment: '5t', date: '2 days ago' },
-        ],
-      });
-    }, 1000);
-  });
 }
 
 export default DashboardPage;

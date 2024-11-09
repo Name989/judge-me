@@ -26,6 +26,10 @@ export default function App() {
                   label: t("Manage Reviews"),
                   destination: "/managereview",
                 },
+                {
+                  label: t("Widgets"),
+                  destination: "/widget",
+                },
               ]}
             />
             <Routes pages={pages} />

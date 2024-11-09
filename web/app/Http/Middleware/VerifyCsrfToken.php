@@ -15,6 +15,7 @@ class VerifyCsrfToken extends Middleware
         'api/products/count',
         'api/products',
         'api/reviews',
+        'api/reply',
         'api/graphql',
         'api/webhooks',
     ];

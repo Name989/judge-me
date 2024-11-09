@@ -20,7 +20,7 @@ use Shopify\Webhooks\Registry;
 use Shopify\Webhooks\Topics;
 
 use App\Http\Controllers\ReviewController;
-
+use App\Http\Controllers\ReviewReplyController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -146,4 +146,5 @@ Route::post('/api/webhooks', function (Request $request) {
     }
 });
 
-Route::get('/api/reviews', [ReviewController::class, 'index']);
+
+Route::get('/api/reply', [ReviewReplyController::class, 'index']);
