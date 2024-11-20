@@ -39,7 +39,7 @@ const ReviewsPage = () => {
     // Fetch reviews from API
     const fetchReviews = async () => {
         try {
-            const response = await fetch('/api/reviews');
+            const response = await fetch('/api/reviews/data');
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setReviews(data);

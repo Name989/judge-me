@@ -1,0 +1,80 @@
+<div class="product-rating-container">
+  <div id="average-rating-display">
+    <div class="star-rating" id="dynamic-stars">
+      <!-- Stars will be dynamically rendered here -->
+    </div>
+    <span class="rating-info" id="dynamic-average-rating">
+      <!-- Average rating and review count will be dynamically displayed here -->
+    </span>
+  </div>
+</div>
+<style>
+  #average-rating-display {
+    display: flex;
+    justify-content: center;
+  }
+  .product-rating-container {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .star-rating {
+    font-size: 25px;
+    color: #0fbcac;
+    margin-right: 10px;
+  }
+  .rating-info {
+    font-size: 20px;
+    margin-top: 5px;
+    display: block;
+  }
+  .star-filled {
+    color: #0fbcac;
+  }
+  .star-empty {
+    color: #ccc;
+  }
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    const productId = {{ product.id | json }}; // Dynamically set product ID using Liquid
+    let reviews = [];
+
+    async function fetchReviews() {
+      try {
+        const response = await fetch(`https://kelly-controlled-crm-noise.trycloudflare.com/api/reviews/fetchdata?product_Id=${productId}`);
+        if (!response.ok) throw new Error("Failed to fetch reviews");
+        reviews = await response.json();
+        updateAverageRating();
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    }
+
+    function calculateAverageRating() {
+      if (reviews.length === 0) return 0;
+      return (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1);
+    }
+
+    function renderStars(rating) {
+      const starContainer = document.getElementById("dynamic-stars");
+      starContainer.innerHTML = ""; // Clear existing stars
+      for (let i = 1; i <= 5; i++) {
+        const star = document.createElement("span");
+        star.textContent = i <= rating ? "★" : "☆";
+        star.classList.add(i <= rating ? "star-filled" : "star-empty");
+        starContainer.appendChild(star);
+      }
+    }
+
+    function updateAverageRating() {
+      const averageRating = calculateAverageRating();
+      const reviewCount = reviews.length;
+      renderStars(Math.round(averageRating));
+      document.getElementById("dynamic-average-rating").textContent = `${reviewCount} reviews `;
+    }
+
+    // Fetch and display the average rating
+    fetchReviews();
+  });
+</script>

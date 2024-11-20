@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewReplyController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\ReviewWidgetSettingsController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -28,3 +29,5 @@ Route::get('/reviews/fetchdata', [ReviewController::class, 'fetchdata']);
 Route::get('/reviews/data', [ReviewController::class, 'index']);
 Route::post('/reviews', [ReviewController::class, 'create']);
 Route::post('/upload-image', [ImageController::class, 'uploadImage']);
+Route::post('/settings/update', [ReviewWidgetSettingsController::class, 'update']);
+Route::get('/settings/{id}', [ReviewWidgetSettingsController::class, 'getSettings']); // Fetch settings

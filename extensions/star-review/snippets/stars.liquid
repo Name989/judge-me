@@ -1,10 +1,348 @@
-{{ 'ratings.stars.label' | t }}:
+<div class="product-review-container">
+  <div id="review-form">
+    <div class="heading">
+      <h3>Customer Review</h3>
+    </div>
+    <div id="product-rating">
+      <div id="star-rating"></div>
+      <span id="average-rating"></span> out of 5
+    </div>
+    <div class="total-reviews">Based on  <span id="total-reviews"></span>  reviews</div>
+    <div class="btn-write" >
+      <button id="write-review-btn">Write a review</button>
+    </div>
+    <div id="review-inputs" style="display: none;">
+      <!-- Initially hidden -->
+      <div id="user-stars" class="user-star-input"></div>
+      <textarea id="user-review" placeholder="Write your review here..."></textarea>
+      <textarea id="review-description" placeholder="Write your review description here..."></textarea>
+      <div id="image-upload">
+        <input type="file" id="image-file" accept="image/*">
+      </div>
+      <button id="submit-review">Submit Review</button>
+    </div>
+    <div>
+      <select id="review-sort">
+        <option value="most_recent">Most Recent</option>
+        <option value="highest_rating">Highest Rating</option>
+        <option value="lowest_rating">Lowest Rating</option>
+      </select>
+    </div>
+  </div>
+  <div id="reviews">
+    <ul id="review-list"></ul>
+      <button id="view-more" style="display: none;">View More</button>
+  </div>
+</div>
 
-{%- for i in (1..rating) -%}
-  ★
-{%- endfor -%}
-{%- assign blank_stars = 5 | minus: rating -%}
-{%- for i in (1..blank_stars) -%}
-  ☆
-{%- endfor -%}
+<style>
+  .btn-write{
+        display: flex;
+    justify-content: center;
+}
+ul#review-list {
+    list-style-type: unset !important;
+}
+  .total-reviews {
+    display: flex;
+    justify-content: center;
+  }
 
+  .heading {
+    display: flex;
+    justify-content: center;
+  }
+  .product-review-container {
+    font-family: Arial, sans-serif;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 25px;
+    border-radius: 5px;
+    border: 1px solid grey;
+  }
+  #product-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 18px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  #total-reviews{
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+  #review-sort{
+        height: 40px;
+    color: #339999;
+    margin-top: 10px;
+}
+  .star {
+    font-size: 24px;
+    color: #2aacbb;
+    cursor: pointer;
+  }
+  #reviews h3 {
+    margin-top: 20px;
+  }
+  .review-item {
+    padding: 10px;
+    border-bottom: 1px solid #e1e3e5;
+  }
+  .review-item:last-child {
+    border-bottom: none;
+  }
+  .review-item .stars {
+    font-size: 24px;
+    color: #2aacbb;
+  }
+  .review-item p {
+    margin: 5px 0 0;
+  }
+  #review-form {
+    margin-top: 20px;
+  }
+  #review-form textarea {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  #review-form button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #0070f3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #reviews {
+    height: 300px;
+    overflow-y: auto;
+  }
+  #image-upload {
+    margin-top: 15px;
+  }
+  #image-upload input {
+    font-size: 14px;
+    padding: 5px;
+  }
+</style>
+
+<script>
+  // Use Liquid to dynamically insert product details from Shopify
+  const productId = {{ product.id | json }};
+  const productName = {{ product.title | json }};
+  let images = [];
+  let imageurl;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    let reviews = [];
+  let reviewsPerPage = 5; // Number of reviews shown initially
+    let currentReviewCount = 0;
+    // Function to fetch reviews from the API
+    async function fetchReviews() {
+      try {
+        const response = await fetch(`https://kelly-controlled-crm-noise.trycloudflare.com/api/reviews/fetchdata?product_Id=${productId}`);
+        if (!response.ok) throw new Error("Failed to fetch reviews");
+        reviews = await response.json();
+       sortReviews("most_recent");
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    }
+
+    // Calculate average rating
+    function calculateAverageRating() {
+      return (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1);
+    }
+
+    // Function to render stars
+    function renderStars(rating, starContainer, isInteractive = false) {
+      starContainer.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.classList.add('star');
+        star.textContent = i <= rating ? '★' : '☆';
+        if (isInteractive) {
+          star.addEventListener('click', () => setUserRating(i));
+        }
+        starContainer.appendChild(star);
+      }
+    }
+
+    // Function to set user rating for submission
+    let userRating = 0;
+    function setUserRating(rating) {
+      userRating = rating;
+      renderStars(rating, document.getElementById('user-stars'), true);
+    }
+
+    // Display average rating and stars
+    function updateProductRatingUI() {
+      const averageRating = calculateAverageRating();
+      document.getElementById("average-rating").textContent = averageRating;
+      document.getElementById("total-reviews").textContent = reviews.length;
+      renderStars(Math.round(averageRating), document.getElementById("star-rating"));
+    }
+
+    // Display each review in the list
+    function updateReviewsUI() {
+      const reviewList = document.getElementById("review-list");
+      reviewList.innerHTML = ''; // Clear previous reviews
+      const reviewsToDisplay = reviews.slice(0, currentReviewCount + reviewsPerPage);
+
+      reviewsToDisplay.forEach(({ rating, title, description }) => {
+        const reviewItem = document.createElement("li");
+        reviewItem.classList.add("review-item");
+        reviewItem.innerHTML = `
+          <div class="stars">${'★'.repeat(rating) + '☆'.repeat(5 - rating)}</div>
+          <p>${title}</p>
+          <p>${description}</p>
+        `;
+        reviewList.appendChild(reviewItem);
+      });
+
+      // Update current review count and toggle "View More" button
+      currentReviewCount += reviewsPerPage;
+      document.getElementById("view-more").style.display = currentReviewCount < reviews.length ? "block" : "none";
+      updateProductRatingUI();
+    }
+  // Function to sort reviews
+    function sortReviews(criteria) {
+      switch (criteria) {
+        case "most_recent":
+          reviews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Assuming each review has a 'date' property
+          break;
+        case "highest_rating":
+          reviews.sort((a, b) => b.rating - a.rating);
+          break;
+        case "lowest_rating":
+          reviews.sort((a, b) => a.rating - b.rating);
+          break;
+        default:
+          break;
+      }
+      updateReviewsUI();
+    }
+
+    // Handle the sort dropdown change
+    document.getElementById("review-sort").addEventListener("change", function () {
+      const selectedOption = this.value;
+      sortReviews(selectedOption);
+    });
+
+    // Initialize the star input for user review
+    renderStars(0, document.getElementById("user-stars"), true);
+
+    // Handle image file upload and log image data to console
+    async function uploadimage(images) {
+      if (!Array.isArray(images)) {
+        images = [images];
+      }
+      images.forEach(file => {
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const base64Image = e.target.result;
+            fetch('https://kelly-controlled-crm-noise.trycloudflare.com/api/upload-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: base64Image }),
+            })
+            .then(response => response.json())
+            .then(data => {
+              imageurl = data.image_url;
+            })
+            .catch(error => {
+              console.error('Error uploading image:', error);
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    document.getElementById('image-upload').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      images = file;
+    });
+
+    // Handle review submission
+    document.getElementById("submit-review").addEventListener("click", async () => {
+      const reviewInputs = document.getElementById("review-inputs");
+      const button = document.getElementById("write-review-btn");
+      const reviewText = document.getElementById("user-review").value;
+      const reviewDescription = document.getElementById("review-description").value;
+
+      if (userRating === 0 || !reviewText.trim() || !reviewDescription.trim()) {
+        alert("Please select a rating and enter your review.");
+        return;
+      }
+
+      const newReview = { rating: userRating, title: reviewText, description: reviewDescription };
+
+      try {
+        const response = await fetch('https://kelly-controlled-crm-noise.trycloudflare.com/api/reviews' , {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_name: productName,
+            product_Id: productId,
+            customer_name: 'test',
+            title: reviewText, 
+            rating: userRating,
+            description: reviewDescription,
+            status: 'Published',
+            type: 'Product',
+            via: 'web',
+          }),
+        });
+        if (!response.ok) throw new Error("Failed to submit review");
+        
+          if (reviewInputs.style.display === "none") {
+        reviewInputs.style.display = "block";
+        button.textContent = "Cancel review"; // Change text to "Cancel review"
+      } else {
+        reviewInputs.style.display = "none";
+        button.textContent = "Write a review"; // Change text back to "Write a review"
+    }   
+
+        reviews.push(newReview);
+        sortReviews("most_recent");
+        uploadimage(images);
+
+        setUserRating(0);
+        document.getElementById("user-review").value = '';
+        document.getElementById("review-description").value = '';
+        document.getElementById('image-file').value = '';
+      } catch (error) {
+        console.error("Error submitting review:", error);
+      }
+    });
+
+    // Slide down the review form when "Write a review" button is clicked
+    document.getElementById("write-review-btn").addEventListener("click", function() {
+      const reviewInputs = document.getElementById("review-inputs");
+      const button = document.getElementById("write-review-btn");
+      
+      if (reviewInputs.style.display === "none") {
+        reviewInputs.style.display = "block";
+        button.textContent = "Cancel review"; // Change text to "Cancel review"
+      } else {
+        reviewInputs.style.display = "none";
+        button.textContent = "Write a review"; // Change text back to "Write a review"
+      }
+    });
+
+    // Handle "View More" button click
+    document.getElementById("view-more").addEventListener("click", function () {
+      updateReviewsUI();
+    });
+
+    // Fetch and display initial reviews
+    fetchReviews();
+  });
+</script>

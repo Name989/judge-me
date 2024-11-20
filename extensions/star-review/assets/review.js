@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Function to fetch reviews from the API
     async function fetchReviews() {
         try {
-            const response = await fetch('https://aids-hall-vehicles-owners.trycloudflare.com/api/reviews/fetchdata'); // Replace with your endpoint
+          const response = await fetch('hhttps://broadway-pillow-bahamas-sf.trycloudflare.com/api/reviews/fetchdata'); // Replace with your endpoint
             if (!response.ok) throw new Error("Failed to fetch reviews");
             reviews = await response.json();
             updateReviewsUI();
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log('Base64 Image:', base64Image); // Optional: to verify the base64 data
 
                     // Send the base64 image data to the server
-                    fetch('https://aids-hall-vehicles-owners.trycloudflare.com/api/upload-image', {  // Change URL if needed
+                  fetch('https://broadway-pillow-bahamas-sf.trycloudflare.com/api/upload-image', {  // Change URL if needed
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const reviewText = document.getElementById("user-review").value;
         const reviewDescription = document.getElementById("review-description").value;
 
-        if (userRating === 0 || !reviewText.trim() || !reviewDescription.trim()) {
+        if (userRating === 0 || !reviewText.trim() || !reviewDescription.trim() ) {
             alert("Please select a rating and enter your review.");
             return;
         }
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const newReview = { rating: userRating, title: reviewText, description: reviewDescription };
 
         try {
-            const response = await fetch('https://aids-hall-vehicles-owners.trycloudflare.com/api/reviews', {  // Replace with your POST endpoint
+          const response = await fetch('https://broadway-pillow-bahamas-sf.trycloudflare.com/api/reviews', {  // Replace with your POST endpoint
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -241,7 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     status: 'Published',
                     type: 'Product',
                     via: 'web',
-                    image_url: imageurl
                 }),
             });
             if (!response.ok) throw new Error("Failed to submit review");
@@ -262,4 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fetch and display initial reviews
     fetchReviews();
+
+
 });

@@ -42,31 +42,33 @@ class ReviewController extends Controller
 
     public function create(Request $request)
     {
-        // Validate the request data
-        $validatedData = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-            'title' => 'required|string|max:255',
-            'product_name' => 'required|string|max:255',
-            'description' => 'required|string|max:255',
-            'status' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'via' => 'required|string|max:255',
-            'image_url'=> 'required|string|max:255'
-        ]);             
+        // // Validate the request data
+        // $validatedData = $request->validate([
+        //     'customer_name' => 'required|string|max:255',
+        //     'rating' => 'required|integer|min:1|max:5',
+        //     'title' => 'required|string|max:255',
+        //     'product_name' => 'required|string|max:255',
+        //     'description' => 'required|string|max:255',
+        //     'status' => 'required|string|max:255',
+        //     'type' => 'required|string|max:255',
+        //     'via' => 'required|string|max:255',
+           
+        // ]);             
 
         try {
             // Explicitly set values to avoid mass assignment issues
-            $review = Review::create([
-                'customer_name' => $validatedData['customer_name'],
-                'rating' => $validatedData['rating'],
-                'title' => $validatedData['title'],
-                'product_name' => $validatedData['product_name'],
-                'description' => $validatedData['description'],
-                'status' => $validatedData['status'],
-                'type' => $validatedData['type'],
-                'via' => $validatedData['via'],
-                'image_url' => $validatedData['image_url']
+            $review = Review::firstOrcreate([
+                'customer_name' => $request->customer_name,
+                'rating' =>$request->rating,
+                'title' =>$request->title,
+                'product_name' => $request->product_name,
+                'description' => $request->description,
+                'status' => $request->status,
+                'type' => $request->type,
+                'via' => $request->via,
+                'product_Id' => $request->product_Id
+
+                
             ]);
 
             return response()->json([
@@ -85,10 +87,14 @@ class ReviewController extends Controller
         }
     }
 
-    public function fetchdata()
+    public function fetchdata(Request $request)
 {
     // Retrieve only published reviews from the database
-    $reviews = Review::where('status', 'Published')->get();
+     $productId = $request->input('product_Id');
+
+    $reviews = Review::where('status', 'Published')
+    ->where('product_Id', $productId)
+    ->get();
     return response()->json($reviews);
 }
 }

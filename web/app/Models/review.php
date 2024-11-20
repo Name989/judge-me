@@ -25,7 +25,8 @@ class Review extends Model
         'status', 
         'type', 
         'via',
-        'image_url'
+        'image_url',
+        'product_Id'
     ];
 
     public function replies()

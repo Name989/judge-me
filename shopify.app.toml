@@ -3,7 +3,7 @@
 client_id = "a0005322103a9d1d178de87336c1b9b8"
 name = "judge-me"
 handle = "judge-me-3"
-application_url = "https://aids-hall-vehicles-owners.trycloudflare.com"
+application_url = "https://acts-allan-endless-epic.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,13 +17,18 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://aids-hall-vehicles-owners.trycloudflare.com/auth/callback",
-  "https://aids-hall-vehicles-owners.trycloudflare.com/auth/shopify/callback",
-  "https://aids-hall-vehicles-owners.trycloudflare.com/api/auth/callback"
+  "https://acts-allan-endless-epic.trycloudflare.com/auth/callback",
+  "https://acts-allan-endless-epic.trycloudflare.com/auth/shopify/callback",
+  "https://acts-allan-endless-epic.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
 api_version = "2024-10"
+
+[app_proxy]
+url = "https://acts-allan-endless-epic.trycloudflare.com"
+subpath = "my-app-proxy"
+prefix = "apps"
 
 [pos]
 embedded = false

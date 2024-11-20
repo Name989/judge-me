@@ -1,0 +1,188 @@
+<div id="reviews-carousel" class="reviews-carousel">
+  <h2>Let customers speak for us</h2>
+  <div class="carousel-rating">
+    <span id="average-rating1" class="gold-stars">⭐⭐⭐⭐⭐</span>
+    <span id="review-count">from <span id="review-total">0</span> reviews</span>
+  </div>
+
+  <div class="carousel-container">
+    <div class="carousel-track" id="carousel-track"></div>
+  </div>
+
+  <!-- Carousel navigation buttons -->
+  <button class="carousel-button prev" onclick="moveToPrevSlide()" id="prevButton">❮</button>
+  <button class="carousel-button next" onclick="moveToNextSlide()" id="nextButton">❯</button>
+</div>
+
+<style>
+  /* Carousel styling */
+  .reviews-carousel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    margin: auto;
+    position: relative;
+    font-family: Arial, sans-serif;
+  }
+  
+  .carousel-rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+  }
+
+  .carousel-rating #average-rating1 {
+    color: #0fbcac;
+    font-size: 1.5em;
+  }
+  
+  .carousel-rating #review-count {
+
+    margin-left: 10px;
+  }
+
+  .carousel-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .carousel-item {
+    min-width: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .carousel-item .stars {
+    color: #0fbcac;
+    font-size: 1.5em;
+  }
+
+  .carousel-item p {
+    font-size: 1em;
+   
+    margin: 5px 0;
+  }
+
+  .carousel-item em {
+    font-style: italic;
+   
+  }
+
+  .carousel-button {
+    position: absolute;
+    top: 50%;
+    background-color: #f0f0f0;
+    color: #888;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.5em;
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+
+  .carousel-button:hover {
+    background-color: #ccc;
+  }
+
+  .carousel-button:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+  }
+
+  .prev { left: 10px; }
+  .next { right: 10px; }
+</style>
+
+<script>
+  let currentIndex = 0;
+  let reviews = [];
+
+  async function fetchReviews(productId) {
+    try {
+      const response = await fetch(`https://kelly-controlled-crm-noise.trycloudflare.com/api/reviews/fetchdata?product_Id=${productId}`);
+      if (!response.ok) throw new Error("Failed to fetch reviews");
+      reviews = await response.json();
+
+      displayAverageRating();
+      renderReviews();
+      updateNavigationButtons(); // Initial button update based on review count
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  }
+
+  function displayAverageRating() {
+    const totalReviews = reviews.length;
+    let sumRating = 0;
+    reviews.forEach(review => {
+      sumRating += review.rating;
+    });
+    const avgRating = (sumRating / totalReviews).toFixed(1);
+
+   const roundedRating = Math.round(avgRating); // Round the rating
+   document.getElementById("average-rating1").textContent = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
+
+    document.getElementById("review-total").textContent = totalReviews;
+  }
+
+  function renderReviews() {
+    const carouselTrack = document.getElementById("carousel-track");
+    carouselTrack.innerHTML = ""; // Clear existing reviews
+
+    reviews.forEach((review) => {
+      const reviewItem = document.createElement("div");
+      reviewItem.classList.add("carousel-item");
+      reviewItem.innerHTML = `
+        <div class="stars">${'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}</div>
+        <p><strong>${review.rating} Rating </strong> - ${review.title || ''}</p>
+        <p>${review.description || ''}</p>
+        <p><i>${review.customer_name || 'Anonymous'}</i></p>
+      `;
+      carouselTrack.appendChild(reviewItem);
+    });
+
+    updateCarouselPosition();
+  }
+
+  function updateCarouselPosition() {
+    const carouselTrack = document.getElementById("carousel-track");
+    const slideWidth = carouselTrack.firstElementChild.offsetWidth;
+    carouselTrack.style.transform = `translateX(${-slideWidth * currentIndex}px)`;
+  }
+
+  function updateNavigationButtons() {
+    document.getElementById("prevButton").disabled = currentIndex === 0;
+    document.getElementById("nextButton").disabled = currentIndex === reviews.length - 1;
+  }
+
+  function moveToPrevSlide() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      updateCarouselPosition();
+      updateNavigationButtons();
+    }
+  }
+
+  function moveToNextSlide() {
+    if (currentIndex < reviews.length - 1) {
+      currentIndex++;
+      updateCarouselPosition();
+      updateNavigationButtons();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const productId = {{ product.id }}; // Use product ID from Shopify Liquid
+    fetchReviews(productId);
+  });
+</script>
